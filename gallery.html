@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>Image Gallery</title>
+ <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script>
+$(document).ready(function(){
+  pageNum = 1;
+	current = "";
+	function setup(){
+		//add click handlers
+		$("#debutTab").on("click", {which:"debuts", page:pageNum}, getFromDribbble);
+		$("#everyoneTab").on("click", {which:"everyone", page:pageNum}, getFromDribbble);
+		$("#popularTab").on("click", {which:"popular", page:pageNum}, getFromDribbble);
+		$("#loadMoreBtn").on("click", {which:"popular", page:pageNum}, getFromDribbble); 
+		
+		//add class to signify currently selected tab
+		$("#popular").addClass("current");
+		$("#popularTab").click();
+	}
+	
+	setup();
+});
+	function getFromDribbble(event){
+		var dribbbleUrl = "http://api.dribbble.com/shots/"+event.data.which;
+
+		//check if user clicked a new tab
+		if($('div[class~="current"]').first()[0].id != event.data.which){
+			$('div[class~="current"]').removeClass("current");
+			$("#"+event.data.which).addClass("current");
+			$("#loadMoreBtn").off("click");
+			$("#loadMoreBtn").on("click", {which:event.data.which}, getFromDribbble);
+			pageNum = 1;
+		}
+		//remove elements from other tabs
+		$(".gallery").not('[class~="current"]').empty();
+		$.ajax({
+			url:dribbbleUrl, 
+			data: {per_page:"9", page:pageNum},
+			success: function(data){
+				for(var i=0; i<9;i++){
+					$("<div/>", {
+						id:data.shots[i]["id"],
+						"class":"imgBox"
+					}).appendTo($("#"+event.data.which));
+					$("<img/>", {
+						src:data.shots[i]["image_url"],
+						"class":"dribbleImg"
+					}).appendTo($(".imgBox[id="+data.shots[i]["id"]+"]"));
+					$("<div/>",{
+						"class":"likesData",
+						text:data.shots[i]["likes_count"]+" Likes"
+					}).appendTo($(".imgBox[id="+data.shots[i]["id"]+"]"));
+					$("<div/>",{
+						"class":"comments",
+						text:data.shots[i]["comments_count"]+" Comments"
+					}).appendTo($(".imgBox[id="+data.shots[i]["id"]+"]"));
+				} 
+			},
+			dataType:"jsonp"
+		});
+		pageNum+=1;	
+	}
+
+</script>
+</head>
+<style type="text/css">
+	#listTabs {
+		border: 2px solid black;
+		padding: 15px 0; 
+		background-color:orange;
+		margin-bottom:20px;
+	}
+	.gallery {
+		clear:both;
+		width:800px;
+	}
+	.buttonTab {
+		display:inline;
+		border:2px solid;
+		border-radius:20px;
+		-mox-border-radius:20px;
+		margin-left:20px;
+		text-align:center;
+		padding: 0 10px;
+		background-color:orange;
+	}
+	.imgBox {
+		border-radius:10px;
+		border:2px solid;
+		margin:5px 15px 15px 15px;
+		padding:15px;
+		width:200px;
+		float:left;
+	}
+	.dribbleImg {
+		width:200px;
+		float:left;
+		margin-bottom:5px;
+		clear:both;
+		border:2px solid;
+	}
+	.likesData {
+		text-align:left;
+		width:90px;
+		display:inline;
+	}
+	.comments {
+		text-align:right;
+		width:90px;
+		display:inline;
+		float:right;
+	}
+	#loadMoreBtn {
+		border:2px solid;
+		border-radius:20px;
+		width:150px;
+		float:left;
+		position:relative;
+		left:350px;
+		padding:5px 20px;
+	}
+</style>
+<body>
+<div id="content">
+	<div id="listTabs">
+		<button class="buttonTab" id="popularTab" name="popular">Popular</button>
+		<button class="buttonTab" id="debutTab" name="debut">Debut</button>
+		<button class="buttonTab" id="everyoneTab" name="everyone">Everyone</button>
+	</div>
+	<div id="popular" class="gallery">
+		
+	</div>
+	<div id="debuts" class="gallery">
+	
+	</div>
+	<div id="everyone" class="gallery">
+	
+	</div>
+	<button id="loadMoreBtn" name="loadMoreBtn">Load More</button>
+</div>
+</body>
+</html>
